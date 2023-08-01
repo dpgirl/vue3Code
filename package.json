@@ -1,5 +1,5 @@
 {
-  "name": "vue3",  
+  "name": "vue3",
   "private": true,
   "version": "1.0.0",
   "description": "",
@@ -9,5 +9,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "vue": "^3.3.4"
+  }
 }
