@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../shared/src/index.ts", "../src/index.ts"],
+  "sourcesContent": ["export function isObject(val) {\r\n  return typeof val === 'object' && val !== null\r\n}", "import { isObject } from \"@xuewu/shared\";\r\n\r\nisObject('abc')\r\n\r\nexport {\r\n  isObject\r\n}"],
+  "mappings": ";AAAO,SAAS,SAAS,KAAK;AAC5B,SAAO,OAAO,QAAQ,YAAY,QAAQ;AAC5C;;;ACAA,SAAS,KAAK;",
+  "names": []
+}
