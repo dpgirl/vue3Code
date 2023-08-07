@@ -6,9 +6,28 @@
   <title>Document</title>
 </head>
 <body>
+  <div id="app"></div>
   <script type="module">
-    import { isObject } from './reactivity.js'
-    console.log(isObject({}))
+    // import { isObject } from './reactivity.js'
+    // console.log(isObject({}))
+    // import { reactive, effect } from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js' 
+    // const state = reactive({ name: 'dp', age: 18 }) // 响应式数据，可以在effect中使用
+    // // effect 会默认执行一次，数据变化了会在执行一次（数据变化导致视图更新）
+    // effect(() => {
+    //   app.innerHTML = state.name + ',' + state.age
+    // })
+    // setTimeout(() => {
+    //   state.age++
+    //   console.log('变化', state)
+    // }, 1000)
+    console.log('222')
+    import { reactive, effect } from './reactivity.js'
+    const data = { name: 'dp', age: 18 }
+    const state = reactive(data)
+    const state1 = reactive(state)
+    console.log('state', state, state === state1)
+    state.name = 'pp'
+    console.log('af', state)
   </script>
 </body>
 </html>
