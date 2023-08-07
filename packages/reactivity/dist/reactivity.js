@@ -1,5 +1,12 @@
 // packages/reactivity/src/effect.ts
 var activeEffect = void 0;
+function cleanupEffect(effect2) {
+  let deps = effect2.deps;
+  for (let i = 0; i < deps.length; i++) {
+    deps[i].delete(effect2);
+  }
+  effect2.deps.length = 0;
+}
 var ReactiveEffect = class {
   // public fn 默认将fn放到类的实例上
   constructor(fn) {
@@ -12,7 +19,7 @@ var ReactiveEffect = class {
     try {
       this.parent = activeEffect;
       activeEffect = this;
-      console.log("activeEffect", activeEffect, this.fn);
+      cleanupEffect(this);
       return this.fn();
     } finally {
       activeEffect = this.parent;
@@ -23,7 +30,6 @@ var ReactiveEffect = class {
 function effect(fn, options = {}) {
   const _effect = new ReactiveEffect(fn);
   const runner = _effect.run.bind(_effect);
-  console.log("runner", runner);
   return runner();
 }
 
@@ -36,7 +42,6 @@ function isObject(val) {
 var mutableHandlers = {
   // 原始对象  属性 代理对象
   get(target, key, recevier) {
-    console.log("get", target, key, recevier);
     if (key === "__v_isReactive" /* IS_REACTIVE */) {
       return true;
     }
@@ -44,13 +49,16 @@ var mutableHandlers = {
     return Reflect.get(target, key, recevier);
   },
   set(target, key, value, recevier) {
-    console.log("set", target, key, value, recevier);
-    return Reflect.set(target, key, value, recevier);
+    let oldValue = target[key];
+    let flag = Reflect.set(target, key, value, recevier);
+    if (value !== oldValue) {
+      trigger(target, key, value, oldValue);
+    }
+    return flag;
   }
 };
 var targetMap = /* @__PURE__ */ new WeakMap();
 function track(target, key) {
-  debugger;
   if (activeEffect) {
     let depsMap = targetMap.get(target);
     if (!depsMap) {
@@ -68,6 +76,20 @@ function track(target, key) {
   }
 }
 console.log("targetMap", targetMap);
+function trigger(target, key, value, oldValue) {
+  const depsMap = targetMap.get(target);
+  if (!depsMap)
+    return;
+  let effects = depsMap.get(key);
+  if (effects) {
+    effects = [...effects];
+    effects.forEach((effect2) => {
+      if (activeEffect !== effect2) {
+        effect2.run();
+      }
+    });
+  }
+}
 
 // packages/reactivity/src/reactive.ts
 function reactive(target) {

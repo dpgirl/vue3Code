@@ -7,28 +7,33 @@ export enum ReactiveFlags {
 export const mutableHandlers = {
   // 原始对象  属性 代理对象
   get(target, key, recevier) {
-    console.log('get', target, key, recevier)
+    // console.log('get', target, key, recevier)
     if(key === ReactiveFlags.IS_REACTIVE) {
       return true
     }
     track(target, key) // 一取值就收集依赖  
+    // return target[key]
     return Reflect.get(target, key, recevier) // this指向是receiver, 为什么不用target[key]？ 保证用户修改属性时，可以监控得到
   },
   set(target, key, value, recevier) {
-    console.log('set', target, key, value, recevier)
+    // console.log('set', target, key, value, recevier)
+    let oldValue = target[key]
+    let flag = Reflect.set(target, key, value, recevier)
+    if (value !== oldValue) {
+      trigger(target, key, value, oldValue)
+    }
     // return target[key] = value
-    return Reflect.set(target, key, value, recevier)
+    return flag
   },
 }
 
 // 3. 收集依赖：属性和effect是 n:n 的关系
-// Map1 = {({ name: 'jw', age: 30 }):Map2}
+// Map1 = {({ name: 'dp', age: 18 }):Map2}
 // Map2 = {name: set()}  每个属性对应的所有effect
-// 最终是：{ name: 'jw', age: 30 } -> {name => [effect,effect]}
+// 最终是：{ name: 'dp', age: 18 } -> {name => [effect,effect]}
 
 const targetMap = new WeakMap()
 function track(target, key) {
-  debugger
   // 当前这个属性是在effect中使用的我才收集，否则不收集
   if (activeEffect) {
     let depsMap = targetMap.get(target)
@@ -49,3 +54,20 @@ function track(target, key) {
   }
 }
 console.log('targetMap', targetMap)
+
+// 4. 触发视图更新  { name: 'dp', age: 18 } -> {name => [effect,effect]}
+function trigger(target, key, value, oldValue) {
+  // 找到effect执行，更新视图
+  const depsMap = targetMap.get(target)
+  if (!depsMap) return
+  let effects = depsMap.get(key)
+  if (effects) {
+    effects = [...effects] // 先拷贝再循环，避免增删操作造成的死循环
+    effects.forEach(effect => {
+      // 当前正在执行的和现在要执行的是同一个，则忽略
+      if (activeEffect !== effect) {
+        effect.run() // 里面有删除+添加的逻辑
+      }
+    })
+  }
+}

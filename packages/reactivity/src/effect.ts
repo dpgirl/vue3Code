@@ -4,6 +4,20 @@
  */
 
 export let activeEffect = undefined
+
+// 清除effect
+function cleanupEffect(effect) {
+  // {name:set(effect)} 属性对应的effect
+
+  // 找到 deps中的set 清理掉effect才可以
+  let deps = effect.deps
+  for(let i = 0; i<deps.length; i++) {
+    // effect.deps = [newSet(),newSet(),newSet()]
+    deps[i].delete(effect)
+  }
+  effect.deps.length = 0 // 让effect中的deps直接清空
+}
+
 export class ReactiveEffect {
   parent = undefined 
   // public fn 默认将fn放到类的实例上
@@ -15,8 +29,9 @@ export class ReactiveEffect {
     try {
       this.parent = activeEffect
       activeEffect = this
-      console.log('activeEffect', activeEffect, this.fn);
-      
+      // console.log('activeEffect', activeEffect, this.fn);
+      // 先清除当前effect， 再新增
+      cleanupEffect(this); 
       return this.fn() // 执行回调函数，触发属性的get
     } finally { 
       // 收集完成后清空缓存
@@ -32,7 +47,6 @@ export function effect(fn, options: any = {}) {
   // 默认让用户的函数执行一次
   // return _effect.run()
   const runner = _effect.run.bind(_effect);
-  console.log('runner', runner)
   return runner();
 
 }

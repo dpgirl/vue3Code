@@ -31,3 +31,6 @@ function createReactiveObject(target) {
   // 代理前 -> 代理后    代理后 -> 代理前【做个标识】
   return proxy
 }
+
+// 1.缓存结果 [缓存代理过的对象]
+// 2.增添自定义属性

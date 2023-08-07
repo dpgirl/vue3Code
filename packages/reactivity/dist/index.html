@@ -22,15 +22,25 @@
     // }, 1000)
     console.log('222')
     import { reactive, effect } from './reactivity.js'
-    const data = { name: 'dp', age: 18 }
+    const data = { name: 'dp', age: 18, flag: true }
     const state = reactive(data)
     // const state1 = reactive(state)
     // console.log('state', state, state === state1)
     // state.name = 'pp'
     // console.log('af', state)
     effect(() => {
-      app.innerHTML = state.name + ',' + state.age
+      // app.innerHTML = state.name + ',' + state.age
+      app.innerHTML = state.flag ? state.name : state.age
+      // app.innerHTML = state.flag ? state.name : state.age + '=' + state.name
+      console.log('run')
     })
+    setTimeout(() => {
+      state.flag = false; // 会显示age
+      setTimeout(() => {
+          console.log('改了name，原则不应该触发effect')
+          state.name = 'abc'; // 需要更新吗？ 不要更新，所以需要取消掉name的收集
+      }, 1000)
+    }, 1000)
   </script>
 </body>
 </html>
