@@ -21,7 +21,7 @@ function cleanupEffect(effect) {
 export class ReactiveEffect {
   parent = undefined 
   // public fn 默认将fn放到类的实例上
-  constructor(public fn) {}
+  constructor(public fn, public scheduler) {}
   deps = [] // effect中药记录哪些属性是在effect中调用的
   run() {
     // 2. 当运行的时候，我们需要将属性和对应的effect关联起来 (一取值就做依赖收集)
@@ -43,10 +43,9 @@ export class ReactiveEffect {
 
 export function effect(fn, options: any = {}) {
   // 1. 将用户的函数，拿到变成一个响应式的函数
-  const _effect = new ReactiveEffect(fn)
+  const _effect = new ReactiveEffect(fn, options.scheduler)
   // 默认让用户的函数执行一次
-  // return _effect.run()
+  _effect.run()
   const runner = _effect.run.bind(_effect);
-  return runner();
-
+  return runner;
 }

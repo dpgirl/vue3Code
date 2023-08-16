@@ -66,7 +66,13 @@ function trigger(target, key, value, oldValue) {
     effects.forEach(effect => {
       // 当前正在执行的和现在要执行的是同一个，则忽略
       if (activeEffect !== effect) {
-        effect.run() // 里面有删除+添加的逻辑
+        if (effect.scheduler) {
+          // 应该执行的事scheduler
+          effect.scheduler()
+        } else {
+          effect.run() // 里面有删除+添加的逻辑
+
+        }
       }
     })
   }

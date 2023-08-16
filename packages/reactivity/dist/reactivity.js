@@ -9,8 +9,9 @@ function cleanupEffect(effect2) {
 }
 var ReactiveEffect = class {
   // public fn 默认将fn放到类的实例上
-  constructor(fn) {
+  constructor(fn, scheduler) {
     this.fn = fn;
+    this.scheduler = scheduler;
     this.parent = void 0;
     this.deps = [];
   }
@@ -28,9 +29,10 @@ var ReactiveEffect = class {
   }
 };
 function effect(fn, options = {}) {
-  const _effect = new ReactiveEffect(fn);
+  const _effect = new ReactiveEffect(fn, options.scheduler);
+  _effect.run();
   const runner = _effect.run.bind(_effect);
-  return runner();
+  return runner;
 }
 
 // packages/shared/src/index.ts
@@ -85,7 +87,11 @@ function trigger(target, key, value, oldValue) {
     effects = [...effects];
     effects.forEach((effect2) => {
       if (activeEffect !== effect2) {
-        effect2.run();
+        if (effect2.scheduler) {
+          effect2.scheduler();
+        } else {
+          effect2.run();
+        }
       }
     });
   }
