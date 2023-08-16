@@ -48,7 +48,11 @@ var mutableHandlers = {
       return true;
     }
     track(target, key);
-    return Reflect.get(target, key, recevier);
+    let result = Reflect.get(target, key, recevier);
+    if (isObject(result)) {
+      return reactive(result);
+    }
+    return result;
   },
   set(target, key, value, recevier) {
     let oldValue = target[key];

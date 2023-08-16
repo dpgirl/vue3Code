@@ -22,7 +22,7 @@
     // }, 1000)
     console.log('222')
     import { reactive, effect } from './reactivity.js'
-    const data = { name: 'dp', age: 18, flag: true }
+    const data = { name: 'dp', age: 18, flag: true, address: { n: {a: 333} } }
     const state = reactive(data)
     // const state1 = reactive(state)
     // console.log('state', state, state === state1)
@@ -34,7 +34,7 @@
     let runner = effect(() => {
       // app.innerHTML = state.name + ',' + state.age
       // app.innerHTML = state.flag ? state.name : state.age
-      app.innerHTML = state.name
+      app.innerHTML = state.address.n.a
       // app.innerHTML = state.flag ? state.name : state.age + '=' + state.name
       console.log('run')
     }, {
@@ -59,9 +59,14 @@
     //   }, 1000)
     // }, 1000)
     // 同步执行
-    state.name = 1
-    state.name = 2
-    state.name = 3
+    // state.name = 1
+    // state.name = 2
+    // state.name = 3
+    
+    // 深度代理： 懒代理，get时才对对象进行代理，而不像vue2 一开始全部递归代理
+    setTimeout(() => {
+      state.address.n.a = 666
+    }, 1000)
   </script>
 </body>
 </html>

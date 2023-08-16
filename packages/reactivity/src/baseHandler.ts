@@ -1,4 +1,6 @@
+import { isObject } from "@xuewu/shared"
 import { activeEffect } from "./effect"
+import { reactive } from "./reactive"
 
 export enum ReactiveFlags {
   "IS_REACTIVE" = "__v_isReactive",
@@ -13,7 +15,12 @@ export const mutableHandlers = {
     }
     track(target, key) // 一取值就收集依赖  
     // return target[key]
-    return Reflect.get(target, key, recevier) // this指向是receiver, 为什么不用target[key]？ 保证用户修改属性时，可以监控得到
+    // return Reflect.get(target, key, recevier) // this指向是receiver, 为什么不用target[key]？ 保证用户修改属性时，可以监控得到
+    let result = Reflect.get(target, key, recevier)
+    if (isObject(result)) {
+      return reactive(result)
+    }
+    return result
   },
   set(target, key, value, recevier) {
     // console.log('set', target, key, value, recevier)
