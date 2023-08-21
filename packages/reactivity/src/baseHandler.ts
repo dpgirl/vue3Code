@@ -34,7 +34,7 @@ export const mutableHandlers = {
   },
 }
 
-// 3. 收集依赖：属性和effect是 n:n 的关系
+// 3. 收集依赖：属性和effect是 n:n 的关系（整个对象收集依赖）
 // Map1 = {({ name: 'dp', age: 18 }):Map2}
 // Map2 = {name: set()}  每个属性对应的所有effect
 // 最终是：{ name: 'dp', age: 18 } -> {name => [effect,effect]}
@@ -51,16 +51,22 @@ function track(target, key) {
     if (!dep) {
       depsMap.set(key, (dep = new Set())) // 每个属性跟effect关联, dep是数组, 用new set()优点： 1. 去重 2.方便判断
     }
-    // 是否应该收集
-    let shouldTrack = !dep.has(activeEffect)
-    if(shouldTrack) {
-      dep.add(activeEffect)
-      // 这里让effect也记录一下有哪些属性
-      activeEffect.deps.push(dep)
-    }
+    // 属性值收集依赖 {name => [effect, effect]}
+    trackEffects(dep) 
   }
 }
 console.log('targetMap', targetMap)
+
+// 属性名收集依赖 {name => [effect, effect]}
+export function trackEffects(dep) {
+  // 是否应该收集
+  let shouldTrack = !dep.has(activeEffect)
+  if(shouldTrack) {
+    dep.add(activeEffect)
+    // 这里让effect也记录一下有哪些属性
+    activeEffect.deps.push(dep)
+  }
+}
 
 // 4. 触发视图更新  { name: 'dp', age: 18 } -> {name => [effect,effect]}
 function trigger(target, key, value, oldValue) {
@@ -68,6 +74,12 @@ function trigger(target, key, value, oldValue) {
   const depsMap = targetMap.get(target)
   if (!depsMap) return
   let effects = depsMap.get(key)
+  // 属性名 获取视图更新 {name => [effect,effect]}
+  triggerEffects(effects)
+}
+
+// 属性名 获取视图更新 {name => [effect,effect]}
+export function triggerEffects(effects) {
   if (effects) {
     effects = [...effects] // 先拷贝再循环，避免增删操作造成的死循环
     effects.forEach(effect => {

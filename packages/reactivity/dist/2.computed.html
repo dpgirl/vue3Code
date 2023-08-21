@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    console.log('222')
+    
+    // import { reactive, computed, effect } from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
+    import { reactive, computed, effect } from './reactivity.js'
+    const state = reactive({ firstname: 'd', lastname: 'p', age: 18 })
+    const fullname = computed(() => {
+      console.log('computed')
+      return state.firstname + state.lastname
+    })
+    console.log('fullname', fullname.value, 'ff', fullname)
+    fullname.value = 'xuewu'
+    // state.firstname = 'xuewu'
+    console.log('fullname6', fullname.value)
+    console.log('fullname8', fullname.value)
+
+    effect(() => {
+      console.log('fullname89', fullname.value)
+    })
+  </script>
+</body>
+</html>

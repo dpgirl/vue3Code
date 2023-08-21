@@ -32,7 +32,7 @@ export class ReactiveEffect {
       // console.log('activeEffect', activeEffect, this.fn);
       // 先清除当前effect， 再新增
       cleanupEffect(this); 
-      return this.fn() // 执行回调函数，触发属性的get
+      return this.fn() // 执行回调函数，触发属性的get, 依赖收集
     } finally { 
       // 收集完成后清空缓存
       activeEffect = this.parent

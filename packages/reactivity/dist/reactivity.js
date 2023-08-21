@@ -39,6 +39,9 @@ function effect(fn, options = {}) {
 function isObject(val) {
   return typeof val === "object" && val !== null;
 }
+function isFunction(val) {
+  return typeof val === "function";
+}
 
 // packages/reactivity/src/baseHandler.ts
 var mutableHandlers = {
@@ -74,19 +77,25 @@ function track(target, key) {
     if (!dep) {
       depsMap.set(key, dep = /* @__PURE__ */ new Set());
     }
-    let shouldTrack = !dep.has(activeEffect);
-    if (shouldTrack) {
-      dep.add(activeEffect);
-      activeEffect.deps.push(dep);
-    }
+    trackEffects(dep);
   }
 }
 console.log("targetMap", targetMap);
+function trackEffects(dep) {
+  let shouldTrack = !dep.has(activeEffect);
+  if (shouldTrack) {
+    dep.add(activeEffect);
+    activeEffect.deps.push(dep);
+  }
+}
 function trigger(target, key, value, oldValue) {
   const depsMap = targetMap.get(target);
   if (!depsMap)
     return;
   let effects = depsMap.get(key);
+  triggerEffects(effects);
+}
+function triggerEffects(effects) {
   if (effects) {
     effects = [...effects];
     effects.forEach((effect2) => {
@@ -121,9 +130,56 @@ function createReactiveObject(target) {
   reactiveMap.set(target, proxy);
   return proxy;
 }
+
+// packages/reactivity/src/computed.ts
+var ComputedRefImpl = class {
+  // 防抖，多次取值，没更新值时，只取一次
+  constructor(getter, setter) {
+    this.getter = getter;
+    this.setter = setter;
+    this.dep = /* @__PURE__ */ new Set();
+    // 依赖
+    this._dirty = true;
+    this.effect = new ReactiveEffect(getter, () => {
+      if (!this._dirty) {
+        this._dirty = true;
+        triggerEffects(this.dep);
+      }
+    });
+  }
+  get value() {
+    if (activeEffect) {
+      trackEffects(this.dep);
+    }
+    if (this._dirty) {
+      this._dirty = false;
+      this._value = this.effect.run();
+    }
+    return this._value;
+  }
+  set value(val) {
+    this.setter(val);
+  }
+};
+function computed(getterOrOptions) {
+  const isGetter = isFunction(getterOrOptions);
+  let getter;
+  let setter;
+  if (isGetter) {
+    getter = getterOrOptions;
+    setter = () => {
+      console.warn("computed is readonly");
+    };
+  } else {
+    getter = getterOrOptions.get;
+    setter = getterOrOptions.set;
+  }
+  return new ComputedRefImpl(getter, setter);
+}
 export {
   ReactiveEffect,
   activeEffect,
+  computed,
   effect,
   reactive
 };
